@@ -4,6 +4,9 @@
 
 FROM ubuntu:16.04
 
+ARG USERNAME="docker"
+ARG PASSWORD="docker"
+
 # Add the PostgreSQL PGP key to verify their Debian packages.
 # It should be the same key as https://www.postgresql.org/media/keys/ACCC4CF8.asc
 #RUN apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
@@ -29,7 +32,7 @@ USER postgres
 # Note: here we use ``&&\`` to run commands one after the other - the ``\``
 #       allows the RUN command to span multiple lines.
 RUN    /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
+    psql --command "CREATE USER ${USERNAME} WITH SUPERUSER PASSWORD '${PASSWORD}';" &&\
     createdb -O docker docker
 
 # Adjust PostgreSQL configuration so that remote connections to the
