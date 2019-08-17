@@ -1,11 +1,12 @@
 version: '3'
 services:
     postgres:
-        build: db-write
+        image: postgres
         restart: always
         environment:
             - POSTGRES_USER=${PG_USERNAME}
             - POSTGRES_PASSWORD=${PG_PASSWORD}
+            - POSTGRES_DB=${PG_DATABASE}
         ports:
             - ${PG_PORT}:5432
     adminer-pg:
