@@ -1,5 +1,10 @@
 version: '3'
 services:
+    trans-srv:
+        build: transaction-server
+        depends_on:
+            - postgres
+        restart: "no"
     postgres:
         image: postgres
         restart: always
