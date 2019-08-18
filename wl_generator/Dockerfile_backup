@@ -1,0 +1,7 @@
+FROM amytabb/docker_ubuntu16_essentials
+COPY newworld /newworld
+WORKDIR /newworld/
+## RUN g++ -std=c++11 -pthread -o NewWorld newworld.cpp
+RUN apt-get install cmake
+RUN rm -rf bin && cmake -H. -Bbin && cmake --build bin
+CMD ["bin/newworld"]

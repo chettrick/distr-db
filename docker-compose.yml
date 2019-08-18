@@ -43,3 +43,5 @@ services:
         restart: always
         ports:
             - ${ADMINER_MONGO_PORT}:80
+    workload-gen:
+            build: wl_generator
