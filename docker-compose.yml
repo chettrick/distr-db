@@ -45,3 +45,11 @@ services:
             - ${ADMINER_MONGO_PORT}:80
     workload-gen:
             build: wl_generator
+    transaction-server-quart:
+            build: transaction-server-quart
+            depends_on:
+                    - postgres
+                    - mongo
+            restart: unless-stopped
+            ports:
+                    - 5000:5000
