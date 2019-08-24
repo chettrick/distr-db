@@ -7,6 +7,18 @@ def create_tables():
     """ Create tables in the PostgreSQL database"""
     commands = (
         """
+        DROP TABLE IF EXISTS vendors CASCADE
+        """,
+        """
+        DROP TABLE IF EXISTS parts CASCADE
+        """,
+        """
+        DROP TABLE IF EXISTS part_drawings CASCADE
+        """,
+        """
+        DROP TABLE IF EXISTS vendor_parts CASCADE
+        """,
+        """
         CREATE TABLE vendors (
             vendor_id SERIAL PRIMARY KEY,
             vendor_name VARCHAR(255) NOT NULL
@@ -135,7 +147,7 @@ def get_vendors():
 
 
 if __name__ == '__main__':
-#    create_tables()
+    create_tables()
     insert_vendor("3M Co.")
     get_vendors()
 #    insert_vendor_list([
