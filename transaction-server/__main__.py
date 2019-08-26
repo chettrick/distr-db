@@ -2,6 +2,75 @@
 
 import psycopg2
 from config import config
+from quart import Quart, request, jsonify, abort, make_response
+from bson import ObjectId
+
+app = Quart(__name__)
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+
+# Sample database for testing API.
+movies = [
+    {
+        'id': 1,
+        'name': u'Top Gun',
+        'desc': u'One daring young pilot flies jets.',
+        'date': u'1986'
+    },
+    {
+        'id': 2,
+        'name': u'Days of Thunder',
+        'desc': u'One daring young driver drives cars.',
+        'date': u'1990'
+    }
+]
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
+@app.route('/api/movies', methods = ['GET'])
+async def get_movies():
+    # Request all movies directly from the Mongo database.
+
+    # XXX Read from Mongo
+
+    return jsonify({'movies': movies})
+
+@app.route('/api/movies/<int:movie_id>', methods = ['GET'])
+async def get_movie(movie_id):
+    # Request a movie with id of movie_id from the Mongo database.
+
+    # XXX Read from Mongo
+    movie = [movie for movie in movies if movie['id'] == movie_id]
+    if len(movie) == 0:
+        abort(404)
+
+    return jsonify({'movie': movie[0]})
+
+@app.route('/api/movies', methods = ['POST'])
+async def create_movie():
+    json_data = await request.get_json()
+
+    # Slight validation on POSTed JSON. Abort on Bad Request.
+    if not json_data or \
+       not 'name' in json_data or \
+       not 'date' in json_data:
+        abort(400)
+
+    # Construct new movie in JSON.
+    new_movie = {
+        'id': movies[-1]['id'] + 1,
+        'name': json_data['name'],
+        'desc': json_data.get('desc', ""),
+        'date': json_data['date']
+    }
+
+    # Add the new movie to the database.
+    movies.append(new_movie)
+
+    # Return new movie to client with Created status code.
+    return jsonify({'movie': new_movie}), 201
+
 
 def create_tables():
     """ Create tables in the PostgreSQL database"""
@@ -147,9 +216,10 @@ def get_vendors():
 
 
 if __name__ == '__main__':
-    create_tables()
-    insert_vendor("3M Co.")
-    get_vendors()
+    app.run(host = '0.0.0.0', port = 5555, debug = True)
+#    create_tables()
+#    insert_vendor("3M Co.")
+#    get_vendors()
 #    insert_vendor_list([
 #        ('AKM Semiconductor Inc.',),
 #        ('Asahi Glass Co Ltd.',),

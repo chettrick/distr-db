@@ -5,6 +5,8 @@ services:
         depends_on:
             - postgres
         restart: "no"
+        ports:
+            - ${TRANS_SRV_PORT}:5555
     postgres:
         image: postgres
         restart: always
