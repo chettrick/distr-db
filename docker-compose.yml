@@ -45,8 +45,6 @@ services:
         restart: always
         ports:
             - ${ADMINER_MONGO_PORT}:80
-    workload-gen:
-            build: wl_generator
     transaction-server-quart:
             build: transaction-server-quart
             depends_on:
@@ -62,3 +60,7 @@ services:
         restart: "no"
         ports:
             - ${FRONTEND_PORT}:5050
+    workload-gen:
+            depends_on:
+                - transaction-server-quart
+            build: wl_generator
