@@ -17,7 +17,9 @@ Currently, there are only three HTTP requests that will get a response.
 * Retrieve list of all movies from the database:
   * GET request to endpoint http://localhost:5555/api/movies
   * Example cURL command:
-    * $ curl -i http://localhost:5555/api/movies
+    ```
+    $ curl -i http://localhost:5555/api/movies
+    ```
   * Example response from transaction server:
 ```
 HTTP/1.1 200
@@ -47,7 +49,9 @@ server: hypercorn-h11
 * Retrieve one movie from the database based on its id.
   * GET request to endpoint http://localhost:5555/api/movies/[id]
   * Example cURL command:
-    * $ curl -i http://localhost:5555/api/movies/1
+    ```
+    $ curl -i http://localhost:5555/api/movies/1
+    ```
   * Example response from transaction server:
 ```
 HTTP/1.1 200
@@ -70,7 +74,15 @@ server: hypercorn-h11
   * POST to endpoint http://localhost:5555/api/movies
   * Currently "name" and "date" fields are required in POST request.
   * Example cURL command:
-    * $ curl -i -H "Content-Type: application/json" -X POST -d '{"name": "Mission Impossible", "date": "1996", "desc": "One daring young man is a secret agent."}' http://localhost:5555/api/movies
+    ```
+    $ curl -i
+           -H "Content-Type: application/json"
+           -X POST
+           -d '{"name": "Mission Impossible",
+                "date": "1996",
+                "desc": "One daring young man is a secret agent."}'
+           http://localhost:5555/api/movies
+    ```
   * Example response from transaction server:
 ```
 HTTP/1.1 201
