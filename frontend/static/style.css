@@ -45,11 +45,6 @@ th.desc {
 th.date {
 	width: 10%;
 }
-th.func1 {
-	display: block;
-	margin: auto;
-	width: 5%;
-}
 input[type="submit"] {
 	width: 20em;
 	height: 2em;

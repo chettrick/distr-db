@@ -34,13 +34,6 @@ async def add():
     movies.insert({"name":name, "desc":desc, "date":date})
     return redirect("/")
 
-@app.route("/remove")
-async def remove():
-    # Delete a Movie
-    key = (await request.values).get("_id")
-    movies.remove({"_id":ObjectId(key)})
-    return redirect("/")
-
 @app.route("/search", methods = ['GET'])
 async def search():
     # Search for Movies
