@@ -32,18 +32,6 @@ table.none {
 table.none td {
 	border: none;
 }
-table.edit {
-	margin: auto 0;
-	padding: auto 0;
-	border: auto 0;
-	border-spacing: 5px;
-	outline: auto 0;
-	font-size: 100%;
-	vertical-align: baseline;
-	background: transparent;
-	width: auto 0;
-	height: auto 0;
-}
 tr.row td {
 	text-decoration: italic;
 }
@@ -58,11 +46,6 @@ th.date {
 	width: 10%;
 }
 th.func1 {
-	display: block;
-	margin: auto;
-	width: 5%;
-}
-th.func2 {
 	display: block;
 	margin: auto;
 	width: 5%;

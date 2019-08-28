@@ -41,23 +41,6 @@ async def remove():
     movies.remove({"_id":ObjectId(key)})
     return redirect("/")
 
-@app.route("/edit")
-async def edit():
-    # Find Movie to edit
-    id = (await request.values).get("_id")
-    movie = movies.find({"_id":ObjectId(id)})
-    return await render_template('edit.html', movies = movie, h = heading, t = title)
-
-@app.route("/save", methods = ['POST'])
-async def save():
-    # Save edited Movie data
-    name = (await request.values).get("name")
-    desc = (await request.values).get("desc")
-    date = (await request.values).get("date")
-    id   = (await request.values).get("_id")
-    movies.update({"_id":ObjectId(id)}, {'$set':{"name":name, "desc":desc, "date":date}})
-    return redirect("/")
-
 @app.route("/search", methods = ['GET'])
 async def search():
     # Search for Movies
