@@ -3,6 +3,7 @@
 // stress testing the system
 
 #include <iostream>
+#include <string>
 #include <functional>
 #include <thread>
 #include "ra/queue.hpp"
@@ -21,17 +22,52 @@ int main()
 	std::thread t1(fun);
 	t1.join();
 
-
 	CURL *curl;
 	CURLcode res;
 	curl = curl_easy_init();
 	if(curl) {
-		curl_easy_setopt(curl, CURLOPT_URL, "http://transaction-server-quart:5000/something");
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "name=daniel&project=curl");
-		res = curl_easy_perform(curl);
+		struct curl_slist *slist1 = NULL;
+		slist1 = curl_slist_append(slist1, "Content-Type: application/json");
+		curl_easy_setopt(curl, CURLOPT_URL, "http://trans-srv:5555/api/movies");
+		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "{\"name\":\"The movie about workload generators\",\"date\":\"2019\"}");
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist1);
+		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
 
+		// Now actually perform the http request
+		res = curl_easy_perform(curl);
 		curl_easy_cleanup(curl);
 	}
+
+	// making use of JSON, http post request to the new transaction server
+	/*
+	CURLcode ret;
+	CURL *hnd;
+	struct curl_slist *slist1;
+	std::string jsonstr = "{\"name\":\"movie name\":\"date\":\"2019\"}";
+
+	slist1 = NULL;
+	slist1 = curl_slist_append(slist1, "Content-Type: application/json");
+	std::string url_str = "http://trans-srv:5555/api/movies";
+
+	hnd = curl_easy_init();
+	curl_easy_setopt(hnd, CURLOPT_URL, url_str.c_str());
+	curl_easy_setopt(hnd, CURLOPT_NOPROGRESS, 1L);
+	curl_easy_setopt(hnd, CURLOPT_POSTFIELDS, jsonstr.c_str());
+	curl_easy_setopt(hnd, CURLOPT_USERAGENT, "curl/7.38.0");
+	curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, slist1);
+	curl_easy_setopt(hnd, CURLOPT_MAXREDIRS, 50L);
+	curl_easy_setopt(hnd, CURLOPT_CUSTOMREQUEST, "POST");
+	curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, 1L);
+
+	ret = curl_easy_perform(hnd);
+
+	curl_easy_cleanup(hnd);
+	hnd = NULL;
+	curl_slist_free_all(slist1);
+	slist1 = NULL;
+
+	********************************************JSON ATTEMPT ABOVE*******/
 
 
 	// The commented out code is an attempt at making use of the SFML library

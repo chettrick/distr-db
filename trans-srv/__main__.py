@@ -4,6 +4,7 @@ import psycopg2
 from config import config
 from quart import Quart, request, jsonify, abort, make_response
 from bson import ObjectId
+import sys
 
 app = Quart(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
@@ -50,6 +51,7 @@ async def get_movie(movie_id):
 @app.route('/api/movies', methods = ['POST'])
 async def create_movie():
     json_data = await request.get_json()
+    print("json data:", json_data, file=sys.stderr)
 
     # Slight validation on POSTed JSON. Abort on Bad Request.
     if not json_data or \
