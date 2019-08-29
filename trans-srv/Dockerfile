@@ -8,4 +8,4 @@ RUN pip3 install -r requirements.txt
 WORKDIR transaction-server
 ADD . .
 
-ENTRYPOINT ["python3", "__main__.py"]
+ENTRYPOINT ["python3", "-u", "__main__.py"]
