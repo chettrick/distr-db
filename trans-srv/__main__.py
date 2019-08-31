@@ -67,8 +67,13 @@ async def create_movie():
         'date': json_data['date']
     }
 
-    # Add the new movie to the database.
+    # Add the new movie to the in-memory dictionary.
+    # The dictionary is a temporary stop-gap used until the databases
+    # are functioning, at which point the dictionary will be removed
     movies.append(new_movie)
+
+    # Add the new movie to the postgreSQL database
+    add_movie(json_data['name'], json_data.get('desc', ""), json_data['date'])
 
     # Return new movie to client with Created status code.
     return jsonify({'movie': new_movie}), 201
@@ -76,55 +81,70 @@ async def create_movie():
 
 def create_tables():
     """ Create tables in the PostgreSQL database"""
+#    commands = (
+#        """
+#        DROP TABLE IF EXISTS vendors CASCADE
+#        """,
+#        """
+#        DROP TABLE IF EXISTS parts CASCADE
+#        """,
+#        """
+#        DROP TABLE IF EXISTS part_drawings CASCADE
+#        """,
+#        """
+#        DROP TABLE IF EXISTS vendor_parts CASCADE
+#        """,
+#        """
+#        CREATE TABLE vendors (
+#            vendor_id SERIAL PRIMARY KEY,
+#            vendor_name VARCHAR(255) NOT NULL
+#        )
+#        """,
+#        """
+#        CREATE TABLE parts (
+#            part_id SERIAL PRIMARY KEY,
+#            part_name VARCHAR(255) NOT NULL
+#        )
+#        """,
+#        """
+#        CREATE TABLE part_drawings (
+#            part_id INTEGER PRIMARY KEY,
+#            file_extension VARCHAR(5) NOT NULL,
+#            drawing_data BYTEA NOT NULL,
+#            FOREIGN KEY (part_id)
+#                REFERENCES parts (part_id)
+#                ON UPDATE CASCADE ON DELETE CASCADE
+#        )
+#        """,
+#        """
+#        CREATE TABLE vendor_parts (
+#            vendor_id INTEGER NOT NULL,
+#            part_id INTEGER NOT NULL,
+#            PRIMARY KEY (vendor_id , part_id),
+#            FOREIGN KEY (vendor_id)
+#                REFERENCES vendors (vendor_id)
+#                ON UPDATE CASCADE ON DELETE CASCADE,
+#            FOREIGN KEY (part_id)
+#                REFERENCES parts (part_id)
+#                ON UPDATE CASCADE ON DELETE CASCADE
+#        )
+#        """
+#    )
+
     commands = (
         """
-        DROP TABLE IF EXISTS vendors CASCADE
+        DROP TABLE IF EXISTS movies CASCADE
         """,
         """
-        DROP TABLE IF EXISTS parts CASCADE
-        """,
-        """
-        DROP TABLE IF EXISTS part_drawings CASCADE
-        """,
-        """
-        DROP TABLE IF EXISTS vendor_parts CASCADE
-        """,
-        """
-        CREATE TABLE vendors (
-            vendor_id SERIAL PRIMARY KEY,
-            vendor_name VARCHAR(255) NOT NULL
+        CREATE TABLE movies (
+            name VARCHAR(255) NOT NULL,
+            description VARCHAR(255),
+            date VARCHAR(255) NOT NULL,
+            PRIMARY KEY (name, date)
         )
-        """,
-        """
-        CREATE TABLE parts (
-            part_id SERIAL PRIMARY KEY,
-            part_name VARCHAR(255) NOT NULL
-        )
-        """,
-        """
-        CREATE TABLE part_drawings (
-            part_id INTEGER PRIMARY KEY,
-            file_extension VARCHAR(5) NOT NULL,
-            drawing_data BYTEA NOT NULL,
-            FOREIGN KEY (part_id)
-                REFERENCES parts (part_id)
-                ON UPDATE CASCADE ON DELETE CASCADE
-        )
-        """,
-        """
-        CREATE TABLE vendor_parts (
-            vendor_id INTEGER NOT NULL,
-            part_id INTEGER NOT NULL,
-            PRIMARY KEY (vendor_id , part_id),
-            FOREIGN KEY (vendor_id)
-                REFERENCES vendors (vendor_id)
-                ON UPDATE CASCADE ON DELETE CASCADE,
-            FOREIGN KEY (part_id)
-                REFERENCES parts (part_id)
-                ON UPDATE CASCADE ON DELETE CASCADE
-        )
-        """
+        """    
     )
+
     conn = None
     try:
         # read connection parameters
@@ -216,10 +236,53 @@ def get_vendors():
         if conn is not None:
             conn.close()
 
+async def add_movie(name_arg, descr_arg, date_arg):
+    """ insert a new movie into the movies table """
+    sql = """
+        INSERT INTO movies(name, description, date)
+        VALUES(%s, %s, %s)
+        """
+
+    conn = None
+    vendor_id = None
+    try:
+        # read database configuration
+        params = config()
+
+        # connect to the PostgreSQL server
+        print('Connecting to the PostgreSQL database...')
+        conn = psycopg2.connect(**params)
+
+        # create a new cursor
+        cur = conn.cursor()
+
+        # execute the INSERT statement
+        await cur.execute(sql, (name_arg,descr_arg,date_arg))
+#        cur.execute(sql)
+
+        # get the generated id back (used when a unique id is generated via 'SERIAL')
+#        vendor_id = cur.fetchone()[0]
+
+        # commit the changes to the database
+        conn.commit()
+
+        # close communication with the database
+        cur.close()
+
+        print("Movie written to db, no error occured")
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error occured:", error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print('Database connection closed.')
+
+#    return vendor_id
+
 
 if __name__ == '__main__':
+    create_tables()
     app.run(host = '0.0.0.0', port = 5555, debug = True)
-#    create_tables()
 #    insert_vendor("3M Co.")
 #    get_vendors()
 #    insert_vendor_list([

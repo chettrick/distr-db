@@ -36,6 +36,8 @@ int main()
 
 		// Now actually perform the http request
 		res = curl_easy_perform(curl);
+		res = curl_easy_perform(curl);
+
 		curl_easy_cleanup(curl);
 	}
 
