@@ -236,7 +236,7 @@ def get_vendors():
         if conn is not None:
             conn.close()
 
-async def add_movie(name_arg, descr_arg, date_arg):
+def add_movie(name_arg, descr_arg, date_arg):
     """ insert a new movie into the movies table """
     sql = """
         INSERT INTO movies(name, description, date)
@@ -257,7 +257,7 @@ async def add_movie(name_arg, descr_arg, date_arg):
         cur = conn.cursor()
 
         # execute the INSERT statement
-        await cur.execute(sql, (name_arg,descr_arg,date_arg))
+        cur.execute(sql, (name_arg,descr_arg,date_arg))
 #        cur.execute(sql)
 
         # get the generated id back (used when a unique id is generated via 'SERIAL')
