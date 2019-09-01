@@ -63,7 +63,7 @@ async def create_movie():
     new_movie = {
         'id': movies[-1]['id'] + 1,
         'name': json_data['name'],
-        'desc': json_data.get('desc', null),
+        'desc': json_data.get('desc', None),
         'date': json_data['date']
     }
 
@@ -74,15 +74,16 @@ async def create_movie():
     return jsonify({'movie': new_movie}), 201
 
 
-def insert_vendor(vendor_name):
-    """ insert a new vendor into the vendors table """
+def insert_movie(movie_name, movie_date, movie_desc):
+    """ insert a new movie into the movies table """
     sql = """
-        INSERT INTO vendors(vendor_name)
-        VALUES(%s) RETURNING vendor_id;
+        INSERT INTO movies(movie_name, movie_date, movie_desc)
+        VALUES(%s, %s, %s)
+        RETURNING movie_id;
         """
 
     conn = None
-    vendor_id = None
+    movie_id = None
     try:
         # read database configuration
         params = config()
@@ -95,13 +96,15 @@ def insert_vendor(vendor_name):
         cur = conn.cursor()
 
         # execute the INSERT statement
-        cur.execute(sql, (vendor_name,))
+        cur.execute(sql, (movie_name, movie_date, movie_desc))
+        print('Inserted record to the PostgreSQL database...')
 
         # get the generated id back
-        vendor_id = cur.fetchone()[0]
+        movie_id = cur.fetchone()[0]
 
         # commit the changes to the database
         conn.commit()
+        print('Committed changes to the PostgreSQL database...')
 
         # close communication with the database
         cur.close()
@@ -112,18 +115,18 @@ def insert_vendor(vendor_name):
             conn.close()
             print('Database connection closed.')
 
-    return vendor_id
+    return movie_id
 
 
-def get_vendors():
-    """ query data from the vendors table """
+def get_movies():
+    """ query data from the movies table """
     conn = None
     try:
         params = config()
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
-        cur.execute("SELECT vendor_id, vendor_name FROM vendors ORDER BY vendor_name")
-        print("The number of parts: ", cur.rowcount)
+        cur.execute("SELECT * FROM movies ORDER BY movie_name")
+        print("The number of movies: ", cur.rowcount)
         row = cur.fetchone()
 
         while row is not None:
@@ -139,9 +142,12 @@ def get_vendors():
 
 
 if __name__ == '__main__':
+    insert_movie("Vanilla Sky", "2001", "One daring young man lives forever.")
+    insert_movie("Strawberry Sky", "2001", None)
+    insert_movie("Chocolate Sky", "2001", "")
+    get_movies()
+
     app.run(host = '0.0.0.0', port = 5555, debug = True)
-#    insert_vendor("3M Co.")
-#    get_vendors()
 #    insert_vendor_list([
 #        ('AKM Semiconductor Inc.',),
 #        ('Asahi Glass Co Ltd.',),
