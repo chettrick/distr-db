@@ -8,7 +8,7 @@ services:
         ports:
             - ${TRANS_SRV_PORT}:5555
     postgres:
-        image: postgres
+        build: postgres
         restart: always
         environment:
             - POSTGRES_USER=${PG_USERNAME}
