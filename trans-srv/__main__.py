@@ -4,6 +4,7 @@ import psycopg2
 from config import config
 from quart import Quart, request, jsonify, abort, make_response
 from bson import ObjectId
+import sys
 
 app = Quart(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
@@ -50,6 +51,7 @@ async def get_movie(movie_id):
 @app.route('/api/movies', methods = ['POST'])
 async def create_movie():
     json_data = await request.get_json()
+    print("json data:", json_data, file=sys.stderr)
 
     # Slight validation on POSTed JSON. Abort on Bad Request.
     if not json_data or \
@@ -57,109 +59,37 @@ async def create_movie():
        not 'date' in json_data:
         abort(400)
 
-    # Construct new movie in JSON.
-    new_movie = {
-        'id': movies[-1]['id'] + 1,
-        'name': json_data['name'],
-        'desc': json_data.get('desc', ""),
-        'date': json_data['date']
-    }
+    movie_name = json_data['name']
+    movie_date = json_data['date']
+    movie_desc = json_data.get('desc', None)
 
     # Add the new movie to the database.
-    movies.append(new_movie)
+    movie_id = insert_movie(movie_name, movie_date, movie_desc)
+
+    # XXX Check return value of movie_id.
+
+    # Construct new movie in JSON.
+    new_movie = {
+        'id': movie_id,
+        'name': movie_name,
+        'date': movie_date,
+        'desc': movie_desc
+    }
 
     # Return new movie to client with Created status code.
     return jsonify({'movie': new_movie}), 201
 
 
-def create_tables():
-    """ Create tables in the PostgreSQL database"""
-    commands = (
-        """
-        DROP TABLE IF EXISTS vendors CASCADE
-        """,
-        """
-        DROP TABLE IF EXISTS parts CASCADE
-        """,
-        """
-        DROP TABLE IF EXISTS part_drawings CASCADE
-        """,
-        """
-        DROP TABLE IF EXISTS vendor_parts CASCADE
-        """,
-        """
-        CREATE TABLE vendors (
-            vendor_id SERIAL PRIMARY KEY,
-            vendor_name VARCHAR(255) NOT NULL
-        )
-        """,
-        """
-        CREATE TABLE parts (
-            part_id SERIAL PRIMARY KEY,
-            part_name VARCHAR(255) NOT NULL
-        )
-        """,
-        """
-        CREATE TABLE part_drawings (
-            part_id INTEGER PRIMARY KEY,
-            file_extension VARCHAR(5) NOT NULL,
-            drawing_data BYTEA NOT NULL,
-            FOREIGN KEY (part_id)
-                REFERENCES parts (part_id)
-                ON UPDATE CASCADE ON DELETE CASCADE
-        )
-        """,
-        """
-        CREATE TABLE vendor_parts (
-            vendor_id INTEGER NOT NULL,
-            part_id INTEGER NOT NULL,
-            PRIMARY KEY (vendor_id , part_id),
-            FOREIGN KEY (vendor_id)
-                REFERENCES vendors (vendor_id)
-                ON UPDATE CASCADE ON DELETE CASCADE,
-            FOREIGN KEY (part_id)
-                REFERENCES parts (part_id)
-                ON UPDATE CASCADE ON DELETE CASCADE
-        )
-        """
-    )
-    conn = None
-    try:
-        # read connection parameters
-        params = config()
-
-        # connect to the PostgreSQL server
-        print('Connecting to the PostgreSQL database...')
-        conn = psycopg2.connect(**params)
-
-        # create a cursor
-        cur = conn.cursor()
-
-        # create table one by one
-        for command in commands:
-            cur.execute(command)
-
-        # commit the changes to the database
-        conn.commit()
-
-        # close communication with the database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            print('Database connection closed.')
-
-def insert_vendor(vendor_name):
-    """ insert a new vendor into the vendors table """
+def insert_movie(movie_name, movie_date, movie_desc):
+    """ insert a new movie into the movies table """
     sql = """
-        INSERT INTO vendors(vendor_name)
-        VALUES(%s) RETURNING vendor_id;
+        INSERT INTO movies(movie_name, movie_date, movie_desc)
+        VALUES(%s, %s, %s)
+        RETURNING movie_id;
         """
 
     conn = None
-    vendor_id = None
+    movie_id = None
     try:
         # read database configuration
         params = config()
@@ -172,13 +102,15 @@ def insert_vendor(vendor_name):
         cur = conn.cursor()
 
         # execute the INSERT statement
-        cur.execute(sql, (vendor_name,))
+        cur.execute(sql, (movie_name, movie_date, movie_desc))
+        print('Inserted record to the PostgreSQL database...')
 
         # get the generated id back
-        vendor_id = cur.fetchone()[0]
+        movie_id = cur.fetchone()[0]
 
         # commit the changes to the database
         conn.commit()
+        print('Committed changes to the PostgreSQL database...')
 
         # close communication with the database
         cur.close()
@@ -189,18 +121,18 @@ def insert_vendor(vendor_name):
             conn.close()
             print('Database connection closed.')
 
-    return vendor_id
+    return movie_id
 
 
-def get_vendors():
-    """ query data from the vendors table """
+def get_movies():
+    """ query data from the movies table """
     conn = None
     try:
         params = config()
         conn = psycopg2.connect(**params)
         cur = conn.cursor()
-        cur.execute("SELECT vendor_id, vendor_name FROM vendors ORDER BY vendor_name")
-        print("The number of parts: ", cur.rowcount)
+        cur.execute("SELECT * FROM movies ORDER BY movie_name")
+        print("The number of movies: ", cur.rowcount)
         row = cur.fetchone()
 
         while row is not None:
@@ -216,10 +148,12 @@ def get_vendors():
 
 
 if __name__ == '__main__':
+    insert_movie("Vanilla Sky", "2001", "One daring young man lives forever.")
+    insert_movie("Strawberry Sky", "2001", None)
+    insert_movie("Chocolate Sky", "2001", "")
+    get_movies()
+
     app.run(host = '0.0.0.0', port = 5555, debug = True)
-#    create_tables()
-#    insert_vendor("3M Co.")
-#    get_vendors()
 #    insert_vendor_list([
 #        ('AKM Semiconductor Inc.',),
 #        ('Asahi Glass Co Ltd.',),

@@ -6,4 +6,4 @@ RUN pip3 install -r requirements.txt
 WORKDIR frontend
 ADD . .
 
-ENTRYPOINT ["python3", "app.py"]
+ENTRYPOINT ["python3", "-u", "app.py"]

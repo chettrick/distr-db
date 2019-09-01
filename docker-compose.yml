@@ -1,14 +1,14 @@
 version: '3'
 services:
     trans-srv:
-        build: transaction-server
+        build: trans-srv
         depends_on:
             - postgres
         restart: "no"
         ports:
             - ${TRANS_SRV_PORT}:5555
     postgres:
-        image: postgres
+        build: postgres
         restart: always
         environment:
             - POSTGRES_USER=${PG_USERNAME}
@@ -62,5 +62,5 @@ services:
             - ${FRONTEND_PORT}:5050
     workload-gen:
             depends_on:
-                - transaction-server-quart
+                - trans-srv
             build: wl_generator

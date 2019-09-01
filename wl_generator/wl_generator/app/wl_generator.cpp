@@ -3,6 +3,7 @@
 // stress testing the system
 
 #include <iostream>
+#include <string>
 #include <functional>
 #include <thread>
 #include "ra/queue.hpp"
