@@ -59,16 +59,22 @@ async def create_movie():
        not 'date' in json_data:
         abort(400)
 
-    # Construct new movie in JSON.
-    new_movie = {
-        'id': movies[-1]['id'] + 1,
-        'name': json_data['name'],
-        'desc': json_data.get('desc', None),
-        'date': json_data['date']
-    }
+    movie_name = json_data['name']
+    movie_date = json_data['date']
+    movie_desc = json_data.get('desc', None)
 
     # Add the new movie to the database.
-    movies.append(new_movie)
+    movie_id = insert_movie(movie_name, movie_date, movie_desc)
+
+    # XXX Check return value of movie_id.
+
+    # Construct new movie in JSON.
+    new_movie = {
+        'id': movie_id,
+        'name': movie_name,
+        'date': movie_date,
+        'desc': movie_desc
+    }
 
     # Return new movie to client with Created status code.
     return jsonify({'movie': new_movie}), 201

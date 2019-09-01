@@ -38,6 +38,8 @@ async def add():
     name = (await request.values).get("name")
     desc = (await request.values).get("desc")
     date = (await request.values).get("date")
+    if not desc:
+        desc = None
 
     payload = {'name': name, 'desc': desc, 'date': date}
     r = requests.post(url_movies, json = payload)
