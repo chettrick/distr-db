@@ -5,6 +5,8 @@ from config import config
 from quart import Quart, request, jsonify, abort, make_response
 from bson import ObjectId
 import sys
+import asyncio
+import asyncpg
 
 app = Quart(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
@@ -73,7 +75,7 @@ async def create_movie():
     movies.append(new_movie)
 
     # Add the new movie to the postgreSQL database
-    add_movie(json_data['name'], json_data.get('desc', ""), json_data['date'])
+    await add_movie(json_data['name'], json_data.get('desc', ""), json_data['date'])
 
     # Return new movie to client with Created status code.
     return jsonify({'movie': new_movie}), 201
@@ -236,11 +238,11 @@ def get_vendors():
         if conn is not None:
             conn.close()
 
-def add_movie(name_arg, descr_arg, date_arg):
+async def add_movie(name_arg, descr_arg, date_arg):
     """ insert a new movie into the movies table """
     sql = """
-        INSERT INTO movies(name, description, date)
-        VALUES(%s, %s, %s)
+        INSERT INTO "movies" ("name", "description", "date") 
+        VALUES($1, $2, $3);
         """
 
     conn = None
@@ -251,30 +253,31 @@ def add_movie(name_arg, descr_arg, date_arg):
 
         # connect to the PostgreSQL server
         print('Connecting to the PostgreSQL database...')
-        conn = psycopg2.connect(**params)
+        conn = await asyncpg.connect(**params)
 
         # create a new cursor
-        cur = conn.cursor()
+#        cur = conn.cursor()
+#        async with conn.curser() as cur:
 
         # execute the INSERT statement
-        cur.execute(sql, (name_arg,descr_arg,date_arg))
+        await conn.execute(sql, name_arg, descr_arg, date_arg)
 #        cur.execute(sql)
 
         # get the generated id back (used when a unique id is generated via 'SERIAL')
 #        vendor_id = cur.fetchone()[0]
 
         # commit the changes to the database
-        conn.commit()
+#            await conn.commit()
 
         # close communication with the database
-        cur.close()
+        await conn.close()
 
         print("Movie written to db, no error occured")
     except (Exception, psycopg2.DatabaseError) as error:
         print("Error occured:", error)
     finally:
         if conn is not None:
-            conn.close()
+            await conn.close()
             print('Database connection closed.')
 
 #    return vendor_id
