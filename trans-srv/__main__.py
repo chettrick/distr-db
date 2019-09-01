@@ -63,7 +63,7 @@ async def create_movie():
     new_movie = {
         'id': movies[-1]['id'] + 1,
         'name': json_data['name'],
-        'desc': json_data.get('desc', ""),
+        'desc': json_data.get('desc', null),
         'date': json_data['date']
     }
 
