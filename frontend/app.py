@@ -36,12 +36,12 @@ async def list():
 async def add():
     # Add a Movie
     name = (await request.values).get("name")
-    desc = (await request.values).get("desc")
     date = (await request.values).get("date")
+    desc = (await request.values).get("desc")
     if not desc:
         desc = None
 
-    payload = {'name': name, 'desc': desc, 'date': date}
+    payload = {'name': name, 'date': date, 'desc': desc}
     r = requests.post(url_movies, json = payload)
 
     return redirect("/")

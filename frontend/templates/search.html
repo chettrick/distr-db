@@ -11,14 +11,14 @@
 	<table>
 	<tr id="row">
 		<th class="name">Movie Name</th>
-		<th class="desc">Movie Description</th>
 		<th class="date">Release Date</th>
+		<th class="desc">Movie Description</th>
 	</tr>
 	{% for movie in movies %}
 	<tr class="datas">
 		<td class="name">{{ movie["name"] }}</td>
-		<td class="desc">{{ movie["desc"] }}</td>
 		<td class="date">{{ movie["date"] }}</td>
+		<td class="desc">{{ movie["desc"] }}</td>
 	</tr>
 	{% endfor %}
 	{% else %}

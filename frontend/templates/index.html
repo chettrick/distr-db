@@ -17,8 +17,8 @@
 	</tr>
 	<tr>
 		<td><input type="text" name="name" placeholder="Movie Name" required/></td>
-		<td><input type="text" name="desc" placeholder="Movie Description"/></td>
 		<td><input type="number" name="date" placeholder="Release Date" required/></td>
+		<td><input type="text" name="desc" placeholder="Movie Description"/></td>
 		<td><button type="submit">Create Entry</button></td>
 	</tr>
 	</table>
@@ -33,8 +33,8 @@
 	<tr>
 		<td><select name="refer" required>
 			<option value="name">Movie Name</option>
-			<option value="desc">Movie Description</option>
 			<option value="date">Release Date</option>
+			<option value="desc">Movie Description</option>
 		</select></td>
 		<td><input type="text" name="key" placeholder="Search for ..." size="15"/></td>
 		<td><button type="submit">Search</button></td>
@@ -47,14 +47,14 @@
 	<table>
 		<tr id="row">
 			<th class="name">Movie Name</th>
-			<th class="desc">Movie Description</th>
 			<th class="date">Release Date</th>
+			<th class="desc">Movie Description</th>
 		</tr>
 		{% for movie in movies %}
 		<tr class="datas">
 			<td class="name">{{ movie["name"] }}</td>
-			<td class="desc">{{ movie["desc"] }}</td>
 			<td class="date">{{ movie["date"] }}</td>
+			<td class="desc">{{ movie["desc"] }}</td>
 		</tr>
 		{% endfor %}
 	</table>
