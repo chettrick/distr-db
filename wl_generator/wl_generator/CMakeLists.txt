@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Used to enable debugging (gdb)
 if(CMAKE_CXX_COMPILER_ID MATCHES GNU)
-	add_compile_options("-g")
+		add_compile_options("-g")
 endif()
 
 # Enables undefined behaviour and address sanitizers
