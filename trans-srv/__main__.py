@@ -103,12 +103,10 @@ async def insert_movie(movie_name, movie_date, movie_desc):
         print('Connecting to the PostgreSQL database...')
         conn = await asyncpg.connect(**params)
 
-        # execute the INSERT statement
-        await conn.execute(sql, movie_name, movie_date, movie_desc)
+        # execute the INSERT statement and get the generated id back
+        movie_id = await conn.fetchval(sql, movie_name, movie_date, movie_desc)
         print('Inserted record to the PostgreSQL database...')
-
-        # get the generated id back
-        movie_id = await conn.fetchval()
+        print("movie id: " + str(movie_id))
 
         # commit the changes to the database
         print('Committed changes to the PostgreSQL database...')
