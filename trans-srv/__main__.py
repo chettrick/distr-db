@@ -5,6 +5,8 @@ from config import config
 from quart import Quart, request, jsonify, abort, make_response
 from bson import ObjectId
 import sys
+import asyncio
+import asyncpg
 
 app = Quart(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
@@ -29,6 +31,7 @@ movies = [
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
+
 @app.route('/api/movies', methods = ['GET'])
 async def get_movies():
     # Request all movies directly from the Mongo database.
@@ -36,6 +39,7 @@ async def get_movies():
     # XXX Read from Mongo
 
     return jsonify({'movies': movies})
+
 
 @app.route('/api/movies/<int:movie_id>', methods = ['GET'])
 async def get_movie(movie_id):
@@ -47,6 +51,7 @@ async def get_movie(movie_id):
         abort(404)
 
     return jsonify({'movie': movie[0]})
+
 
 @app.route('/api/movies', methods = ['POST'])
 async def create_movie():
@@ -64,7 +69,7 @@ async def create_movie():
     movie_desc = json_data.get('desc', None)
 
     # Add the new movie to the database.
-    movie_id = insert_movie(movie_name, movie_date, movie_desc)
+    movie_id = await insert_movie(movie_name, movie_date, movie_desc)
 
     # XXX Check return value of movie_id.
 
@@ -80,11 +85,11 @@ async def create_movie():
     return jsonify({'movie': new_movie}), 201
 
 
-def insert_movie(movie_name, movie_date, movie_desc):
+async def insert_movie(movie_name, movie_date, movie_desc):
     """ insert a new movie into the movies table """
     sql = """
-        INSERT INTO movies(movie_name, movie_date, movie_desc)
-        VALUES(%s, %s, %s)
+        INSERT INTO "movies" ("movie_name", "movie_date", "movie_desc")
+        VALUES($1, $2, $3)
         RETURNING movie_id;
         """
 
@@ -96,29 +101,27 @@ def insert_movie(movie_name, movie_date, movie_desc):
 
         # connect to the PostgreSQL server
         print('Connecting to the PostgreSQL database...')
-        conn = psycopg2.connect(**params)
-
-        # create a new cursor
-        cur = conn.cursor()
+        conn = await asyncpg.connect(**params)
 
         # execute the INSERT statement
-        cur.execute(sql, (movie_name, movie_date, movie_desc))
+        await conn.execute(sql, movie_name, movie_date, movie_desc)
         print('Inserted record to the PostgreSQL database...')
 
         # get the generated id back
-        movie_id = cur.fetchone()[0]
+        movie_id = await conn.fetchval()
 
         # commit the changes to the database
-        conn.commit()
         print('Committed changes to the PostgreSQL database...')
 
         # close communication with the database
-        cur.close()
+        await conn.close()
+
+        print("Movie written to db, no error occured")
     except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+        print("Error occured:", error)
     finally:
         if conn is not None:
-            conn.close()
+            await conn.close()
             print('Database connection closed.')
 
     return movie_id
@@ -148,16 +151,4 @@ def get_movies():
 
 
 if __name__ == '__main__':
-    insert_movie("Vanilla Sky", "2001", "One daring young man lives forever.")
-    insert_movie("Strawberry Sky", "2001", None)
-    insert_movie("Chocolate Sky", "2001", "")
-    get_movies()
-
     app.run(host = '0.0.0.0', port = 5555, debug = True)
-#    insert_vendor_list([
-#        ('AKM Semiconductor Inc.',),
-#        ('Asahi Glass Co Ltd.',),
-#        ('Daikin Industries Ltd.',),
-#        ('Dynacast International Inc.',),
-#        ('Foster Electric Co. Ltd.',),
-#        ('Murata Manufacturing Co. Ltd.',)
