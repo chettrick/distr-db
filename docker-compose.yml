@@ -4,6 +4,7 @@ services:
         build: trans-srv
         depends_on:
             - postgres
+            - mongo
         restart: "no"
         ports:
             - ${TRANS_SRV_PORT}:5555

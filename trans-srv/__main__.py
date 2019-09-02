@@ -7,6 +7,7 @@ from bson import ObjectId
 import sys
 import asyncio
 import asyncpg
+import motor.motor_asyncio
 
 app = Quart(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
@@ -27,6 +28,22 @@ movies = [
     }
 ]
 
+motorclient = None  # Motor (MongoDB) client
+db = None           # MongoDB database
+coll = None         # Movies collection of the database
+
+@app.before_serving
+async def init():
+    global motorclient
+    global db
+    global coll
+    # Create a Motor (MongoDB) client
+    motorclient = motor.motor_asyncio.AsyncIOMotorClient("mongodb://mongo:27017/",
+        username='docker', password='docker', io_loop=asyncio.get_event_loop())
+    db = motorclient.docker # Get a MongoDB database
+    coll = db.movies        # Get the movies collection of the database
+
+
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
@@ -37,6 +54,26 @@ async def get_movies():
     # Request all movies directly from the Mongo database.
 
     # XXX Read from Mongo
+    await do_insert()
+
+    # Mongo database connection
+    print('Connecting to the MongoDB database...')
+    data = {
+        "_id": 59,
+        "name": "The Matrix 59",
+        "date": "2059",
+        "desc": "Neo, in his old age, practices Tai Chi"
+    }
+    print('Inserting data document...')
+    result = await coll.insert_one(data)
+    print('result %s' % repr(result.inserted_id))
+    print('Listing database names...')
+    print(await motorclient.list_database_names())
+    print('Listing inserted id...')
+    print(result.inserted_id)
+    print('Find document by _id and print it out...')
+    print(await coll.find_one({'_id': 59}))
+    print('Database connection closed.')
 
     return jsonify({'movies': movies})
 
@@ -146,6 +183,27 @@ def get_movies():
     finally:
         if conn is not None:
             conn.close()
+
+
+async def do_insert():
+    # Mongo database connection
+    print('Connecting to the MongoDB database...')
+    data = {
+        "_id": 42,
+        "name": "The Hitchhikers Get Lost",
+        "date": "20042",
+        "desc": "The Meaning of Life is Survival"
+    }
+    print('Inserting data record...')
+    result = await coll.insert_one(data)
+    print('result %s' % repr(result.inserted_id))
+    print('Listing database names...')
+    print(await motorclient.list_database_names())
+    print('Listing inserted id...')
+    print(result.inserted_id)
+    print('Print out first document...')
+    print(await coll.find_one())
+    print('Database connection closed.')
 
 
 if __name__ == '__main__':
