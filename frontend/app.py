@@ -1,6 +1,4 @@
 from quart import Quart, render_template, request, redirect, url_for
-from bson import ObjectId
-from pymongo import MongoClient
 import json
 import requests
 
@@ -8,11 +6,6 @@ app = Quart(__name__)
 
 title   = "Movie Database"
 heading = "Movie Database"
-
-client = MongoClient("mongodb://mongo:27017",
-            username='docker', password='docker')
-db     = client.docker
-movies = db.movie
 
 url_movies = 'http://trans-srv:5555/api/movies'
 
@@ -49,17 +42,18 @@ async def add():
 @app.route("/search", methods = ['GET'])
 async def search():
     # Search for Movies
-    key   = (await request.values).get("key")
     refer = (await request.values).get("refer")
+    key   = (await request.values).get("key")
 
-    if (key == "_id"):
-        movies_l = movies.find({refer:ObjectId(key)})
-    elif (key == ""):
-        movies_l = movies.find()
+    if (key == ""):
+        r = requests.get(url_movies)
     else:
-        movies_l = movies.find({refer:key})
+        url_search = url_movies + "?" + refer + "=" + key
+        r = requests.get(url_search)
+
+    movies_l = r.json().get('movies')
 
     return await render_template('search.html', movies = movies_l, t = title, h = heading)
 
 if __name__ == "__main__":
-    app.run(host = '0.0.0.0', port=5050, debug = True)
+    app.run(host = '0.0.0.0', port = 5050, debug = True)
