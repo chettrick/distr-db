@@ -99,34 +99,12 @@ void query_records(	ra::concurrency::thread_pool &tp,
 
 int main()
 {
-	std::function<void()> fun2 = []() { 
-		std::cout << "running http request" << std::endl; 
-			CURL *curl;
-			CURLcode res;
-			curl = curl_easy_init();
-			if(curl) {
-				struct curl_slist *slist1 = NULL;
-				slist1 = curl_slist_append(slist1, "Content-Type: application/json");
-				curl_easy_setopt(curl, CURLOPT_URL, "http://trans-srv:5555/api/movies");
-				curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
-				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "{\"name\":\"The bigger better movie about workload generators\",\"date\":\"2020\"}");
-				curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist1);
-				curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
-
-				// Now actually perform the http request
-				res = curl_easy_perform(curl);
-				res = curl_easy_perform(curl);
-
-				curl_easy_cleanup(curl);
-			}
-	}; // end of lambda function fun2
 
 	// No idea why, but the compiler complains unless I create and join on a thread
 	// so this code (3 lines) below is here just to keep gcc happy...  
 	std::function<void()> fun = []() {std::cout << "running wl_generator" << std::endl;};
 	std::thread t1(std::move(fun));
 	t1.join();
-
 
 	// Testing factory function, just ensuring the strings are being modified
 	// as expected
@@ -136,7 +114,6 @@ int main()
 	ra::concurrency::thread_pool tp(100);
 	add_records(tp, 5, "movie_name", "movie_description", "2019");
 	query_records(tp, 2);
-//	tp.schedule(std::move(fun2));
 	std::cout << "finished tester, queue and threadpool made" << std::endl;
 	return 0;
 }
