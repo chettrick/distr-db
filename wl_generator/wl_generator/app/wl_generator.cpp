@@ -74,8 +74,7 @@ void add_records(	ra::concurrency::thread_pool &tp,
 			const std::string init_name,
 			const std::string init_descr,
 			const std::string init_date) {
-	// start from 1, as the PostgreSQL server begins labelling id starting at 1
-	for(unsigned long long i = 1; i <= num_records; ++i) {
+	for(unsigned long long i = 0; i < num_records; ++i) {
 		std::cout << "current movie name: " << (init_name + std::to_string(i)) << std::endl;
 
 		// Create args for the factory function,
@@ -89,31 +88,62 @@ void add_records(	ra::concurrency::thread_pool &tp,
 	}
 }
 
+// used to perform a series of http GET requests to the transaction server.
+// Note: this is the method of performing queries on the database.
 void query_records(	ra::concurrency::thread_pool &tp,
 			const unsigned long long num_records) {
-	for(unsigned long long i = 0; i < num_records; ++i) {
+	// start from 1, as the PostgreSQL server begins labelling id starting at 1
+	for(unsigned long long i = 1; i <= num_records; ++i) {
 		auto cur_fun = make_get_function(i);
 		tp.schedule(cur_fun);
 	}
 }
 
+// This function writes a series of records to the movies table
+// by placing this in a function and creating the thread pool
+// inside the function, it is guaranteed that when this function
+// returns, all tasks performed here have been completed.
+// To elaborate - the thread pool destructor ensures that all
+// tasks are complete by closing the thread pool and joining on
+// all the threads.  The threads will only return when 2 conditions
+// are met: 
+// 1 - the thread pool status is set to closed
+// 2 - the task queue is empty
+void add_data_set_1() {
+	const int NUM_THREADS = 5;
+	ra::concurrency::thread_pool tp(NUM_THREADS);
+	add_records(tp, 5, "movie_name", "movie_description", "2019");
+
+}
+
+// read_data_set_1 function makes a series of queries to the data
+// written by the function add_data_set_1
+void read_data_set_1() {
+	const int NUM_THREADS = 5;
+	ra::concurrency::thread_pool tp(NUM_THREADS);
+	query_records(tp, 5);
+}
+
+// this test will make queries on pre-existing data while concurrently
+// adding new data.  The new data will not be queried at this time.
+// This guarantees that all queries are being made on data that exists.
+//void add_and_read() {
+//
+//}
+
 int main()
 {
-
 	// No idea why, but the compiler complains unless I create and join on a thread
 	// so this code (3 lines) below is here just to keep gcc happy...  
 	std::function<void()> fun = []() {std::cout << "running wl_generator" << std::endl;};
 	std::thread t1(std::move(fun));
 	t1.join();
 
-	// Testing factory function, just ensuring the strings are being modified
-	// as expected
+	// write a set of data to the database
+	add_data_set_1();
+	// query the set of records written in add_data_set_1()
+	read_data_set_1();
 
-	using function_type = std::function<void()>;
-	const std::size_t QUEUE_SIZE = 500;
-	ra::concurrency::thread_pool tp(100);
-	add_records(tp, 5, "movie_name", "movie_description", "2019");
-	query_records(tp, 2);
 	std::cout << "finished tester, queue and threadpool made" << std::endl;
 	return 0;
 }
