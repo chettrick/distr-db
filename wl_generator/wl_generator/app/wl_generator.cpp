@@ -111,8 +111,9 @@ void query_records(	ra::concurrency::thread_pool &tp,
 // 2 - the task queue is empty
 void add_data_set_1() {
 	const int NUM_THREADS = 5;
+	const unsigned long long num_records = 5;
 	ra::concurrency::thread_pool tp(NUM_THREADS);
-	add_records(tp, 5, "movie_name", "movie_description", "2019");
+	add_records(tp, num_records, "movie_name", "movie_description", "2019");
 
 }
 
@@ -120,8 +121,9 @@ void add_data_set_1() {
 // written by the function add_data_set_1
 void read_data_set_1() {
 	const int NUM_THREADS = 5;
+	const unsigned long long num_records = 5;
 	ra::concurrency::thread_pool tp(NUM_THREADS);
-	query_records(tp, 5);
+	query_records(tp, num_records);
 }
 
 // this test will make queries on pre-existing data while concurrently
