@@ -66,7 +66,6 @@ namespace concurrency {
 				clear();
 			}
 			delete[] queue_;
-			std::cout << "queue destructor running..." << std::endl;
 		}
 
 		// Inserts the value x at the end of the queue, blocking if
@@ -142,7 +141,6 @@ namespace concurrency {
 				convar_queue_not_full_.notify_one();
 				return status::success;
 			} else if(is_closed()) { // it is closed and empty
-				std::cout << "queue closed and empty, pop returning status::closed" << std::endl;
 				return status::closed;
 			} else { // it is not closed, but it is empty
 				// block thread.  If queue becomes not full

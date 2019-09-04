@@ -6,4 +6,6 @@ RUN apt-get update -y && apt-get install gcc-8 g++-8 cmake -y && ln -s /usr/bin/
 RUN apt-get install libcurl4-openssl-dev -y
 COPY wl_generator /wl_generator
 RUN rm -rf bin && cmake -H. -Bbin && cmake --build bin
-CMD ["bin/wl_generator"]
+COPY start.sh /
+RUN chmod +x /start.sh
+CMD ["/start.sh"]

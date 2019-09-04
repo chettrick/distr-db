@@ -11,12 +11,14 @@
 #include "ra/thread_pool.hpp"
 #include <curl/curl.h>
 
+const int NUM_THREADS = 1000;
+
 void usage() {
 	std::cout << "Usage:\n" <<
 		"To make a series of writes:\n" << 
 		"$ -w num_records starting_id\n\n" <<
 		"To make a series of queries:\n" <<
-		"$ -r num_records starting_id [id | name]\n\n" <<
+		"$ -r num_records starting_id\n\n" <<
 		"To make a series of reads and writes concurrently:\n" << 
 		"$ -rw num_records starting_id global_id [id | name]" << std::endl;
 }
@@ -118,7 +120,6 @@ void query_records(	ra::concurrency::thread_pool &tp,
 // 1 - the thread pool status is set to closed
 // 2 - the task queue is empty
 void add_data_set(unsigned long long num_records, unsigned long long starting_id) {
-	const int NUM_THREADS = 5;
 	ra::concurrency::thread_pool tp(NUM_THREADS);
 
 	// TODO: make use of starting_id (add arg to add_records)
@@ -128,10 +129,9 @@ void add_data_set(unsigned long long num_records, unsigned long long starting_id
 
 // read_data_set_1 function makes a series of queries to the data
 // written by the function add_data_set_1
-void read_data_set_1() {
-	const int NUM_THREADS = 5;
-	const unsigned long long num_records = 50;
+void read_data_set(unsigned long long num_records, unsigned long long starting_id) {
 	ra::concurrency::thread_pool tp(NUM_THREADS);
+	// TODO: make use of starting_id (add arg to add_records)
 	query_records(tp, num_records);
 }
 
@@ -156,7 +156,6 @@ void write_and_read(	const unsigned long long global_num_records,
 			const unsigned long long local_num_records,
 			const unsigned long long starting_index) {
 
-	const int NUM_THREADS = 5;
 	ra::concurrency::thread_pool tp(NUM_THREADS);
 
 	std::string 	init_name = "movie_name",
@@ -198,16 +197,19 @@ int main(int argc, char **argv)
 		std::cout << "too few args: " << argc << std::endl;
 		usage();
 	}
+
+	unsigned long long 	num_records = strtoull(argv[2], nullptr, 10);
+	unsigned long long	starting_id = strtoull(argv[3], nullptr, 10);
+
 	if (strcmp(argv[1], "-w") == 0) {
-		std::cout << "-r arg provided" << std::endl;
-		unsigned long long 	num_records = strtoull(argv[2], nullptr, 10);
-		unsigned long long	starting_id = strtoull(argv[3], nullptr, 10);
-		std::cout << "num_records: " << num_records << "\nstarting_id: " << starting_id << std::endl;
+		std::cout << "-w arg provided" << std::endl;
 		add_data_set(num_records, starting_id);
 	} else if (strcmp(argv[1], "-r") == 0) { 
 		std::cout << "-r arg provided" << std::endl;
+		read_data_set(num_records, starting_id);
 	} else if (strcmp(argv[1], "-rw") == 0) { 
 		std::cout << "-rw arg provided" << std::endl;
+		
 	} else {
 		usage();
 	}
