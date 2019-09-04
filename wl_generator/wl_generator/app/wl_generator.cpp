@@ -209,7 +209,12 @@ int main(int argc, char **argv)
 		read_data_set(num_records, starting_id);
 	} else if (strcmp(argv[1], "-rw") == 0) { 
 		std::cout << "-rw arg provided" << std::endl;
-		
+		if(argc < 5) {
+			std::cout << "Too few args for -rw flag" << std::endl;
+		} else {
+			unsigned long long global_num_records = strtoull(argv[4], nullptr, 10);
+			write_and_read(global_num_records, num_records, starting_id);
+		}
 	} else {
 		usage();
 	}
