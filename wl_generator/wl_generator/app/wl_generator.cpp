@@ -74,7 +74,7 @@ void add_records(	ra::concurrency::thread_pool &tp,
 			const std::string init_name,
 			const std::string init_descr,
 			const std::string init_date) {
-	for(unsigned long long i = 0; i < num_records; ++i) {
+	for(unsigned long long i = 1; i <= num_records; ++i) {
 		std::cout << "current movie name: " << (init_name + std::to_string(i)) << std::endl;
 
 		// Create args for the factory function,
@@ -111,7 +111,7 @@ void query_records(	ra::concurrency::thread_pool &tp,
 // 2 - the task queue is empty
 void add_data_set_1() {
 	const int NUM_THREADS = 5;
-	const unsigned long long num_records = 5;
+	const unsigned long long num_records = 50;
 	ra::concurrency::thread_pool tp(NUM_THREADS);
 	add_records(tp, num_records, "movie_name", "movie_description", "2019");
 
@@ -121,7 +121,7 @@ void add_data_set_1() {
 // written by the function add_data_set_1
 void read_data_set_1() {
 	const int NUM_THREADS = 5;
-	const unsigned long long num_records = 5;
+	const unsigned long long num_records = 50;
 	ra::concurrency::thread_pool tp(NUM_THREADS);
 	query_records(tp, num_records);
 }
@@ -129,9 +129,51 @@ void read_data_set_1() {
 // this test will make queries on pre-existing data while concurrently
 // adding new data.  The new data will not be queried at this time.
 // This guarantees that all queries are being made on data that exists.
-//void add_and_read() {
 //
-//}
+// NOTE: the new data being added will start at an offset equal to the
+// total data set.  (this accomidates concurrent use of several wl_generators)
+//
+// FOR EXAMPLE: assume the following parameters:
+// global_num_records = 1'000'000'000
+// local_num_records = 200'000'000
+// starting_id = 400'000'000
+// 1 billion records are being read and written in total, across all wl_generators, but this
+// instance of the wl_generator is only reading/writing 200 million records (4 other
+// wl_generator containers are being run elsewhere).  This wl_generator's starting
+// index is 400 million, so the writes will begin at index 1.4 billion.  This will
+// ensure that the originally written 1 billion records remain untouched by this process
+// and the read tasks will always find a valid record.
+void write_and_read(	const unsigned long long global_num_records,
+			const unsigned long long local_num_records,
+			const unsigned long long starting_index) {
+
+	const int NUM_THREADS = 5;
+	ra::concurrency::thread_pool tp(NUM_THREADS);
+
+	std::string 	init_name = "movie_name",
+			init_descr = "movie_description",
+			init_date = "2019";
+
+	// determine starting write location
+	for(		unsigned long long write_index = global_num_records + starting_index,
+			read_index = starting_index; 
+			read_index < starting_index + local_num_records;
+			++write_index, ++read_index) {
+
+		auto 	suffix = std::to_string(write_index);
+		auto 	cur_post_name = init_name + suffix,
+			cur_post_descr = init_descr + suffix,
+			cur_post_date = init_date + suffix;
+
+		// create write lambda function and schedule it
+		auto cur_post_fun = make_post_function(cur_post_name, cur_post_descr, cur_post_date);
+		tp.schedule(cur_post_fun);
+
+		// create query lambda function and schedule it
+		auto cur_get_fun = make_get_function(read_index);
+		tp.schedule(cur_get_fun);
+	}
+}
 
 int main()
 {
@@ -141,10 +183,15 @@ int main()
 	std::thread t1(std::move(fun));
 	t1.join();
 
+
+	// Argument list:
+	// arg[1]: [-r -w -rw] 
 	// write a set of data to the database
 	add_data_set_1();
 	// query the set of records written in add_data_set_1()
 	read_data_set_1();
+	// concurrently write and query the database
+	write_and_read(50, 50, 1);
 
 	std::cout << "finished tester, queue and threadpool made" << std::endl;
 	return 0;
