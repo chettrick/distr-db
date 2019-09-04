@@ -35,14 +35,29 @@ def not_found(error):
 
 @app.route('/api/movies', methods = ['GET'])
 async def get_movies():
+    movie_name = (await request.values).get("name", None)
+    movie_date = (await request.values).get("date", None)
+    movie_desc = (await request.values).get("desc", None)
+
     # Request all movies directly from the Mongo database.
+
+    arg_list = {}   # Arguments for searching Mongo.
+
+    # Hand craft dictionary if search parameters for find() in Mongo.
+    if movie_name is not None:
+        arg_list['name'] = movie_name
+    if movie_date is not None:
+        arg_list['date'] = movie_date
+    if movie_desc is not None:
+        arg_list['desc'] = movie_desc
 
     movie_list = None
 
     # Read from Mongo into a Python list.
-    cursor = coll.find()
+    cursor = coll.find(arg_list)
     movie_list = await cursor.to_list(length=100)
     print("GET request to return all movies")
+    print("or to return movies based on URL query parameters")
     print("returned movie list: ", movie_list)
 
     if movie_list is None:
