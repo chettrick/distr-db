@@ -4,15 +4,23 @@
 
 #include <iostream>
 #include <string>
+#include <string.h>
 #include <functional>
 #include <thread>
 #include "ra/queue.hpp"
 #include "ra/thread_pool.hpp"
 #include <curl/curl.h>
 
+void usage() {
+	std::cout << "Usage:\n" <<
+		"To make a series of writes:\n" << 
+		"$ -w num_records starting_id\n\n" <<
+		"To make a series of queries:\n" <<
+		"$ -r num_records starting_id [id | name]\n\n" <<
+		"To make a series of reads and writes concurrently:\n" << 
+		"$ -rw num_records starting_id global_id [id | name]" << std::endl;
+}
 
-using namespace std;
-     
 // Factory function
 // This returns a lambda function that inserts a record in the database system
 auto make_post_function(std::string name, std::string descr, std::string date) {
@@ -109,10 +117,11 @@ void query_records(	ra::concurrency::thread_pool &tp,
 // are met: 
 // 1 - the thread pool status is set to closed
 // 2 - the task queue is empty
-void add_data_set_1() {
+void add_data_set(unsigned long long num_records, unsigned long long starting_id) {
 	const int NUM_THREADS = 5;
-	const unsigned long long num_records = 50;
 	ra::concurrency::thread_pool tp(NUM_THREADS);
+
+	// TODO: make use of starting_id (add arg to add_records)
 	add_records(tp, num_records, "movie_name", "movie_description", "2019");
 
 }
@@ -175,7 +184,7 @@ void write_and_read(	const unsigned long long global_num_records,
 	}
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	// No idea why, but the compiler complains unless I create and join on a thread
 	// so this code (3 lines) below is here just to keep gcc happy...  
@@ -184,14 +193,31 @@ int main()
 	t1.join();
 
 
-	// Argument list:
-	// arg[1]: [-r -w -rw] 
+	// Parse/sanitize args
+	if(argc < 4) {
+		std::cout << "too few args: " << argc << std::endl;
+		usage();
+	}
+	if (strcmp(argv[1], "-w") == 0) {
+		std::cout << "-r arg provided" << std::endl;
+		unsigned long long 	num_records = strtoull(argv[2], nullptr, 10);
+		unsigned long long	starting_id = strtoull(argv[3], nullptr, 10);
+		std::cout << "num_records: " << num_records << "\nstarting_id: " << starting_id << std::endl;
+		add_data_set(num_records, starting_id);
+	} else if (strcmp(argv[1], "-r") == 0) { 
+		std::cout << "-r arg provided" << std::endl;
+	} else if (strcmp(argv[1], "-rw") == 0) { 
+		std::cout << "-rw arg provided" << std::endl;
+	} else {
+		usage();
+	}
+	
 	// write a set of data to the database
-	add_data_set_1();
+//	add_data_set_1();
 	// query the set of records written in add_data_set_1()
-	read_data_set_1();
+//	read_data_set_1();
 	// concurrently write and query the database
-	write_and_read(50, 50, 1);
+//	write_and_read(50, 50, 1);
 
 	std::cout << "finished tester, queue and threadpool made" << std::endl;
 	return 0;
